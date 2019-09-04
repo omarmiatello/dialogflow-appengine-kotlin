@@ -80,7 +80,7 @@ abstract class FirebaseDatabaseApi {
     protected fun deletePath(path: String) = delete("$basePath$path.json")
 }
 
-inline fun <reified T> fireProperty(key: String, serializer: KSerializer<T>, useCache: Boolean) =
+inline fun <reified T> fireProperty(key: String, serializer: KSerializer<T>, useCache: Boolean = true) =
     object : ReadWriteProperty<FirebaseDatabaseApi, T?> {
         override fun getValue(thisRef: FirebaseDatabaseApi, property: KProperty<*>): T? {
             return if (useCache) {
@@ -102,9 +102,9 @@ inline fun <reified T> fireProperty(key: String, serializer: KSerializer<T>, use
         }
     }
 
-inline fun <reified T> fireList(key: String, serializer: KSerializer<Collection<T>>, useCache: Boolean) =
-    object : ReadWriteProperty<FirebaseDatabaseApi, Collection<T>> {
-        override fun getValue(thisRef: FirebaseDatabaseApi, property: KProperty<*>): Collection<T> {
+inline fun <reified T> fireList(key: String, serializer: KSerializer<List<T>>, useCache: Boolean = true) =
+    object : ReadWriteProperty<FirebaseDatabaseApi, List<T>> {
+        override fun getValue(thisRef: FirebaseDatabaseApi, property: KProperty<*>): List<T> {
             return if (useCache) {
                 val string = appEngineCacheFast.getOrPut("${thisRef.javaClass.canonicalName}.${property.name}") {
                     json.stringify(serializer, thisRef[key, serializer].orEmpty())
@@ -115,7 +115,7 @@ inline fun <reified T> fireList(key: String, serializer: KSerializer<Collection<
             }
         }
 
-        override fun setValue(thisRef: FirebaseDatabaseApi, property: KProperty<*>, value: Collection<T>) {
+        override fun setValue(thisRef: FirebaseDatabaseApi, property: KProperty<*>, value: List<T>) {
             if (useCache) {
                 appEngineCacheFast["${thisRef.javaClass.canonicalName}.${property.name}"] = json.stringify(serializer, value)
             }
@@ -123,7 +123,7 @@ inline fun <reified T> fireList(key: String, serializer: KSerializer<Collection<
         }
     }
 
-inline fun <reified T> fireMap(key: String, serializer: KSerializer<Map<String, T>>, useCache: Boolean) =
+inline fun <reified T> fireMap(key: String, serializer: KSerializer<Map<String, T>>, useCache: Boolean = true) =
     object : ReadWriteProperty<FirebaseDatabaseApi, Map<String, T>> {
         override fun getValue(thisRef: FirebaseDatabaseApi, property: KProperty<*>): Map<String, T> {
             return if (useCache) {
